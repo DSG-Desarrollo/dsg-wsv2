@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TasksController;
 /*
 |--------------------------------------------------------------------------
@@ -19,5 +20,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::match(['get', 'post'], '/login', 'App\Http\Controllers\AuthController@login');
+Route::match(['get', 'post'], '/login', [AuthController::class, 'login']);
 Route::get('/tasks', [TasksController::class, 'getTasks']);

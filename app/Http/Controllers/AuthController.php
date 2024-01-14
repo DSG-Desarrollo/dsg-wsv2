@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Employees;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -13,20 +13,31 @@ class AuthController extends Controller
         $data = $request->json()->all(); // Obtiene todos los datos JSON enviados en la solicitud
         //dd($data);
         // Verifica si se enviaron 'usuario' y 'clave'
-        if (isset($data['usuario']) && isset($data['clave'])) {
-            $user = User::where('usuario', $data['usuario'])
-            ->where('estado_usuario', 'A')->first();
-    
-            if (!$user || $user->clave !== md5($data['clave'])) {
+        if (isset($data['email']) && isset($data['password'])) {
+            $user = User::where('usuario', $data['email'])
+                ->where('estado_usuario', 'A')->first();
+
+            if (!$user || $user->clave !== md5($data['password'])) {
                 return response()->json(['message' => 'Credenciales incorrectas'], 401);
             }
-    
-            // Genera un token de acceso aquí (utilizando Laravel Passport u otro método apropiado)
-    
-            return response()->json(['user' => $user]);
+
+            $responseData = [
+                'user' => $user,
+            ];
+
+            if ($data['rememberSession']) {
+                $tokenResult = $user->createToken('apiToken')->accessToken;
+
+                $responseData['tokenData'] = [
+                    'access_token' => $tokenResult,
+                    'token_type' => 'Bearer',
+                    'expires_at' => now()->addDays(7)->toDateTimeString(),
+                ];
+            }
+
+            return response()->json($responseData);
         } else {
             return response()->json(['message' => 'Faltan credenciales'], 400);
         }
     }
-    
 }

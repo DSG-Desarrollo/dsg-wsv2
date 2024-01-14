@@ -23,7 +23,7 @@ class Tasks extends Model
         'id_autorizacion_tarea',
         'id_usuario_revision',
         'id_municipio',
-        'codigo_tarea' ,
+        'codigo_tarea',
         'puesto_trabajo',
         'descripcion_tarea',
         'comentario_tarea',
@@ -76,5 +76,17 @@ class Tasks extends Model
     public function revisionUser()
     {
         return $this->belongsTo(User::class, 'id_usuario_revision', 'id_usuario');
+    }
+
+    public function scopeFilteredTasks($query, $userId)
+    {
+        return $query->where('progreso_tarea', '<>', 'S')
+            ->whereHas('assignmentsTasks', function ($subquery) use ($userId) {
+                $subquery->where('estado_asignacion', 'A')
+                    ->whereHas('employee.user', function ($userSubquery) use ($userId) {
+                        $userSubquery->where('id_usuario', $userId);
+                    });
+            })
+            ->orderBy('registro_fecha', 'DESC');
     }
 }
